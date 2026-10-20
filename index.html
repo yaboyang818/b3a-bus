@@ -6,16 +6,16 @@
 <title>B3A — Fu Tai Estate ⇄ Shenzhen Bay Port</title>
 <style>
   :root {
-    --bg: #070c17;
-    --panel: #101a2e;
-    --panel-hi: #16233d;
-    --line: #223354;
-    --ink: #f2f6ff;
-    --muted: #8ea2c4;
-    --accent: #ffd23f;
-    --accent-2: #6ea8ff;
-    --good: #4ade9f;
-    --bad: #ff8080;
+    --bg: #fff0f6;
+    --panel: #ffffff;
+    --panel-hi: #ffe6f1;
+    --line: #ffc9de;
+    --ink: #5b1136;
+    --muted: #b5738f;
+    --accent: #ff2d87;
+    --accent-2: #b23bff;
+    --good: #12a875;
+    --bad: #e0335f;
   }
 
   * { box-sizing: border-box; }
@@ -26,8 +26,8 @@
     min-height: 100dvh;
     color: var(--ink);
     background:
-      radial-gradient(1100px 600px at 15% -10%, #1b2d52 0%, transparent 60%),
-      radial-gradient(900px 500px at 110% 10%, #2a2350 0%, transparent 55%),
+      radial-gradient(1100px 600px at 15% -10%, #ffc4de 0%, transparent 62%),
+      radial-gradient(900px 500px at 110% 8%, #ffd9ef 0%, transparent 55%),
       var(--bg);
     font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -48,12 +48,12 @@
     min-width: 88px;
     padding: 14px 12px;
     border-radius: 16px;
-    background: var(--accent);
-    color: #131313;
+    background: linear-gradient(135deg, #ff5aa8, #ff1f7d);
+    color: #ffffff;
     font-size: 30px;
     font-weight: 800;
     letter-spacing: .02em;
-    box-shadow: 0 10px 30px rgba(255, 210, 63, .22);
+    box-shadow: 0 10px 30px rgba(255, 31, 125, .28);
   }
 
   .titles { flex: 1; min-width: 0; }
@@ -84,7 +84,7 @@
     transition: background .2s, border-color .2s, transform .2s;
   }
 
-  .refresh:hover { background: var(--panel-hi); border-color: #33497a; }
+  .refresh:hover { background: var(--panel-hi); border-color: #ff9cc6; }
   .refresh:active { transform: scale(.95); }
   .refresh:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   .refresh svg { width: 19px; height: 19px; }
@@ -106,7 +106,7 @@
     text-transform: uppercase;
   }
 
-  .section-label .to { color: #b9c8e6; }
+  .section-label .to { color: #9a3663; }
   .section-label .to .arrow { color: var(--accent-2); padding: 0 .35em; }
 
   .live {
@@ -123,13 +123,13 @@
     height: 8px;
     border-radius: 50%;
     background: var(--good);
-    box-shadow: 0 0 0 4px rgba(74, 222, 159, .12);
+    box-shadow: 0 0 0 4px rgba(18, 168, 117, .15);
     transition: background .2s, box-shadow .2s;
   }
 
   .dot.offline {
     background: var(--bad);
-    box-shadow: 0 0 0 4px rgba(255, 128, 128, .12);
+    box-shadow: 0 0 0 4px rgba(224, 51, 95, .15);
   }
 
   .buses {
@@ -148,16 +148,16 @@
   }
 
   .section[data-feed="out"] .bus.next {
-    border-color: rgba(255, 210, 63, .55);
+    border-color: rgba(255, 45, 135, .5);
     background:
-      linear-gradient(165deg, rgba(255, 210, 63, .10), transparent 55%),
+      linear-gradient(165deg, rgba(255, 45, 135, .12), transparent 55%),
       linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
   }
 
   .section[data-feed="ret"] .bus.next {
-    border-color: rgba(110, 168, 255, .55);
+    border-color: rgba(178, 59, 255, .5);
     background:
-      linear-gradient(165deg, rgba(110, 168, 255, .10), transparent 55%),
+      linear-gradient(165deg, rgba(178, 59, 255, .12), transparent 55%),
       linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
   }
 
@@ -193,7 +193,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .clock strong { color: #cfdcf5; font-weight: 600; }
+  .clock strong { color: #7c1746; font-weight: 600; }
 
   .rmk { margin-top: 8px; color: var(--accent); font-size: 12px; line-height: 1.35; }
 
@@ -219,15 +219,15 @@
     gap: 6px 14px;
     margin-top: 26px;
     padding-top: 16px;
-    border-top: 1px solid rgba(34, 51, 84, .6);
+    border-top: 1px solid rgba(255, 201, 222, .9);
     color: var(--muted);
     font-size: 12.5px;
   }
 
   footer a {
-    color: #a9bde0;
+    color: #a3366b;
     text-decoration: none;
-    border-bottom: 1px dotted #4b628f;
+    border-bottom: 1px dotted #ff9cc6;
   }
 
   footer a:hover { color: var(--ink); }
