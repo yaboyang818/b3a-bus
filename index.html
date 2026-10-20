@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>B3A — Fu Tai Estate → Shenzhen Bay Port</title>
+<style>
+  :root {
+    --bg: #070c17;
+    --panel: #101a2e;
+    --panel-hi: #16233d;
+    --line: #223354;
+    --ink: #f2f6ff;
+    --muted: #8ea2c4;
+    --accent: #ffd23f;
+    --good: #4ade9f;
+    --bad: #ff8080;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 600px at 15% -10%, #1b2d52 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #2a2350 0%, transparent 55%),
+      var(--bg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .board {
+    width: min(760px, 100%);
+    margin: 0 auto;
+    padding: clamp(22px, 5vw, 52px) clamp(18px, 4vw, 28px) 40px;
+  }
+
+  header { display: flex; align-items: center; gap: 16px; }
+
+  .route {
+    flex: none;
+    display: grid;
+    place-items: center;
+    min-width: 88px;
+    padding: 14px 12px;
+    border-radius: 16px;
+    background: var(--accent);
+    color: #131313;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: .02em;
+    box-shadow: 0 10px 30px rgba(255, 210, 63, .22);
+  }
+
+  .titles { flex: 1; min-width: 0; }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(19px, 3.6vw, 27px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+  }
+
+  h1 .arrow { color: var(--accent); padding: 0 .15em; }
+
+  .subtitle { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
+
+  .refresh {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .2s;
+  }
+
+  .refresh:hover { background: var(--panel-hi); border-color: #33497a; }
+  .refresh:active { transform: scale(.95); }
+  .refresh:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .refresh svg { width: 19px; height: 19px; }
+  .refresh.spin svg { animation: spin .8s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 38px 0 14px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: none;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 4px rgba(74, 222, 159, .12);
+    transition: background .2s, box-shadow .2s;
+  }
+
+  .dot.offline {
+    background: var(--bad);
+    box-shadow: 0 0 0 4px rgba(255, 128, 128, .12);
+  }
+
+  .buses {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .bus {
+    position: relative;
+    overflow: hidden;
+    padding: 22px 20px 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
+  }
+
+  .bus.next {
+    border-color: rgba(255, 210, 63, .55);
+    background:
+      linear-gradient(165deg, rgba(255, 210, 63, .10), transparent 55%),
+      linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
+  }
+
+  .bus.next::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--accent);
+  }
+
+  .eta { display: flex; align-items: baseline; gap: 8px; }
+
+  .mins {
+    font-size: clamp(50px, 10vw, 72px);
+    font-weight: 750;
+    line-height: .95;
+    letter-spacing: -.035em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bus.next .mins { color: var(--accent); }
+
+  .unit { color: var(--muted); font-size: 15px; font-weight: 600; }
+
+  .clock {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .clock strong { color: #cfdcf5; font-weight: 600; }
+
+  .rmk { margin-top: 8px; color: var(--accent); font-size: 12px; line-height: 1.35; }
+
+  .empty {
+    grid-column: 1 / -1;
+    padding: 34px 24px;
+    border: 1px dashed var(--line);
+    border-radius: 20px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .empty span { display: block; margin-top: 6px; font-size: 13px; opacity: .75; }
+
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(34, 51, 84, .6);
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+
+  footer a {
+    color: #a9bde0;
+    text-decoration: none;
+    border-bottom: 1px dotted #4b628f;
+  }
+
+  footer a:hover { color: var(--ink); }
+
+  @media (max-width: 480px) {
+    .route { min-width: 70px; padding: 12px 10px; font-size: 24px; border-radius: 14px; }
+    .refresh { width: 40px; height: 40px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .refresh.spin svg { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <main class="board">
+    <header>
+      <div class="route" aria-hidden="true">B3A</div>
+      <div class="titles">
+        <h1>Fu Tai Estate <span class="arrow">→</span> Shenzhen Bay Port</h1>
+        <p class="subtitle">富泰邨 → 深圳灣口岸 · Citybus</p>
+      </div>
+      <button class="refresh" id="refresh" type="button" aria-label="Refresh now" title="Refresh now">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+          <path d="M21 3v6h-6" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="section-label">
+      <span>Next departures</span>
+      <span class="live" role="status" aria-live="polite">
+        <span class="dot" id="dot"></span>
+        <span id="status">Connecting…</span>
+      </span>
+    </div>
+
+    <section class="buses" id="buses">
+      <div class="empty">Loading departures…</div>
+    </section>
+
+    <footer>
+      <span>
+        Real-time ETA ·
+        <a href="https://data.gov.hk/en/" target="_blank" rel="noopener">DATA.GOV.HK</a> ·
+        Citybus
+      </span>
+      <span>
+        <span id="updated">Waiting for data</span> ·
+        <span id="countdown">next refresh in 30s</span>
+      </span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // B3A outbound (towards Shenzhen Bay Port), Fu Tai Estate stop.
+      const API = 'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/003261/B3A';
+      const REFRESH_MS = 30_000;
+      const MAX_BUSES = 3;
+
+      const busesEl = document.getElementById('buses');
+      const statusEl = document.getElementById('status');
+      const dotEl = document.getElementById('dot');
+      const updatedEl = document.getElementById('updated');
+      const countdownEl = document.getElementById('countdown');
+      const refreshBtn = document.getElementById('refresh');
+
+      const hkTime = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Hong_Kong',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+
+      const hkTimeSec = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Hong_Kong',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      let nextRefresh = Date.now() + REFRESH_MS;
+      let loading = false;
+      let hasRendered = false;
+
+      const escapeHTML = (value) =>
+        String(value).replace(/[&<>"']/g, (char) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        }[char]));
+
+      function minutesUntil(iso) {
+        const target = Date.parse(iso);
+        if (Number.isNaN(target)) return null;
+        const minutes = Math.ceil((target - Date.now()) / 60_000);
+        return minutes <= 0 ? 0 : minutes;
+      }
+
+      function paintMinutes() {
+        busesEl.querySelectorAll('[data-eta]').forEach((card) => {
+          const minutes = minutesUntil(card.dataset.eta);
+          if (minutes === null) return;
+          card.querySelector('.mins').textContent = minutes === 0 ? 'Due' : String(minutes);
+          card.querySelector('.unit').textContent = minutes === 0 ? '' : 'min';
+        });
+      }
+
+      function render(data) {
+        const buses = (Array.isArray(data) ? data : [])
+          .filter((bus) => bus && bus.route === 'B3A')
+          .sort((a, b) => {
+            const aTime = Date.parse(a.eta);
+            const bTime = Date.parse(b.eta);
+            return (Number.isNaN(aTime) ? Infinity : aTime) - (Number.isNaN(bTime) ? Infinity : bTime);
+          })
+          .slice(0, MAX_BUSES);
+
+        if (buses.length === 0) {
+          busesEl.innerHTML =
+            '<div class="empty">No upcoming departures right now.' +
+            '<span>This board checks again every 30 seconds.</span></div>';
+          hasRendered = true;
+          return;
+        }
+
+        busesEl.innerHTML = buses.map((bus, index) => {
+          const validEta = Boolean(bus.eta) && !Number.isNaN(Date.parse(bus.eta));
+          const minutes = validEta ? minutesUntil(bus.eta) : null;
+          const time = validEta ? hkTime.format(new Date(bus.eta)) : '—';
+          const remark = (bus.rmk_en || '').trim();
+          const minutesText = minutes === null ? '—' : minutes === 0 ? 'Due' : String(minutes);
+          const unitText = minutes === null || minutes === 0 ? '' : 'min';
+
+          return [
+            `<article class="bus${index === 0 ? ' next' : ''}"${validEta ? ` data-eta="${escapeHTML(bus.eta)}"` : ''}>`,
+            '  <div class="eta">',
+            `    <span class="mins">${minutesText}</span>`,
+            `    <span class="unit">${unitText}</span>`,
+            '  </div>',
+            `  <div class="clock">${validEta ? `Scheduled <strong>${time}</strong>` : 'No time available'}</div>`,
+            remark ? `  <div class="rmk">${escapeHTML(remark)}</div>` : '',
+            '</article>',
+          ].join('\n');
+        }).join('\n');
+
+        hasRendered = true;
+        paintMinutes();
+      }
+
+      async function load() {
+        if (loading) return;
+        loading = true;
+        refreshBtn.classList.add('spin');
+        dotEl.classList.remove('offline');
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12_000);
+
+        try {
+          const response = await fetch(API, {
+            signal: controller.signal,
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const payload = await response.json();
+          render(payload.data);
+
+          statusEl.textContent = 'Live';
+          updatedEl.textContent = `Updated ${hkTimeSec.format(new Date())}`;
+          updatedEl.title = payload.generated_timestamp
+            ? `Feed generated ${payload.generated_timestamp}`
+            : '';
+        } catch (error) {
+          dotEl.classList.add('offline');
+          statusEl.textContent = 'Offline';
+
+          if (hasRendered) {
+            updatedEl.textContent = 'Showing last known times';
+          } else {
+            updatedEl.textContent = 'Unable to reach the feed';
+            busesEl.innerHTML =
+              '<div class="empty">Could not load the ETA feed.' +
+              '<span>Retrying automatically every 30 seconds…</span></div>';
+          }
+        } finally {
+          clearTimeout(timeout);
+          loading = false;
+          refreshBtn.classList.remove('spin');
+          nextRefresh = Date.now() + REFRESH_MS;
+          tick();
+        }
+      }
+
+      function tick() {
+        paintMinutes();
+
+        const seconds = Math.max(0, Math.ceil((nextRefresh - Date.now()) / 1000));
+        countdownEl.textContent = loading
+          ? 'refreshing…'
+          : seconds > 0
+            ? `next refresh in ${seconds}s`
+            : 'refreshing…';
+
+        if (!loading && Date.now() >= nextRefresh) load();
+      }
+
+      refreshBtn.addEventListener('click', () => {
+        if (!loading) load();
+      });
+
+      load();
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
