@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>B3A — Fu Tai Estate → Shenzhen Bay Port</title>
+<title>B3A — Fu Tai Estate ⇄ Shenzhen Bay Port</title>
 <style>
   :root {
     --bg: #070c17;
@@ -13,6 +13,7 @@
     --ink: #f2f6ff;
     --muted: #8ea2c4;
     --accent: #ffd23f;
+    --accent-2: #6ea8ff;
     --good: #4ade9f;
     --bad: #ff8080;
   }
@@ -59,7 +60,7 @@
 
   h1 {
     margin: 0;
-    font-size: clamp(19px, 3.6vw, 27px);
+    font-size: clamp(18px, 3.4vw, 25px);
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -.01em;
@@ -93,16 +94,20 @@
 
   .section-label {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin: 38px 0 14px;
+    gap: 8px 12px;
+    margin: 34px 0 14px;
     color: var(--muted);
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: .14em;
+    letter-spacing: .12em;
     text-transform: uppercase;
   }
+
+  .section-label .to { color: #b9c8e6; }
+  .section-label .to .arrow { color: var(--accent-2); padding: 0 .35em; }
 
   .live {
     display: inline-flex;
@@ -142,10 +147,17 @@
     background: linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
   }
 
-  .bus.next {
+  .section[data-feed="out"] .bus.next {
     border-color: rgba(255, 210, 63, .55);
     background:
       linear-gradient(165deg, rgba(255, 210, 63, .10), transparent 55%),
+      linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
+  }
+
+  .section[data-feed="ret"] .bus.next {
+    border-color: rgba(110, 168, 255, .55);
+    background:
+      linear-gradient(165deg, rgba(110, 168, 255, .10), transparent 55%),
       linear-gradient(165deg, var(--panel-hi), var(--panel) 70%);
   }
 
@@ -157,6 +169,8 @@
     background: var(--accent);
   }
 
+  .section[data-feed="ret"] .bus.next::after { background: var(--accent-2); }
+
   .eta { display: flex; align-items: baseline; gap: 8px; }
 
   .mins {
@@ -167,7 +181,8 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .bus.next .mins { color: var(--accent); }
+  .section[data-feed="out"] .bus.next .mins { color: var(--accent); }
+  .section[data-feed="ret"] .bus.next .mins { color: var(--accent-2); }
 
   .unit { color: var(--muted); font-size: 15px; font-weight: 600; }
 
@@ -193,6 +208,8 @@
   }
 
   .empty span { display: block; margin-top: 6px; font-size: 13px; opacity: .75; }
+
+  .note { margin: 12px 2px 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; opacity: .85; }
 
   footer {
     display: flex;
@@ -230,8 +247,8 @@
     <header>
       <div class="route" aria-hidden="true">B3A</div>
       <div class="titles">
-        <h1>Fu Tai Estate <span class="arrow">→</span> Shenzhen Bay Port</h1>
-        <p class="subtitle">富泰邨 → 深圳灣口岸 · Citybus</p>
+        <h1>Fu Tai Estate <span class="arrow">⇄</span> Shenzhen Bay Port</h1>
+        <p class="subtitle">富泰邨 ⇄ 深圳灣口岸 · Citybus</p>
       </div>
       <button class="refresh" id="refresh" type="button" aria-label="Refresh now" title="Refresh now">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -241,17 +258,32 @@
       </button>
     </header>
 
-    <div class="section-label">
-      <span>Next departures</span>
-      <span class="live" role="status" aria-live="polite">
-        <span class="dot" id="dot"></span>
-        <span id="status">Connecting…</span>
-      </span>
+    <div class="section" data-feed="out">
+      <div class="section-label">
+        <span>From Fu Tai Estate <span class="to"><span class="arrow">→</span>Shenzhen Bay Port</span></span>
+        <span class="live" role="status" aria-live="polite">
+          <span class="dot"></span>
+          <span class="status">Connecting…</span>
+        </span>
+      </div>
+      <section class="buses">
+        <div class="empty">Loading departures…</div>
+      </section>
     </div>
 
-    <section class="buses" id="buses">
-      <div class="empty">Loading departures…</div>
-    </section>
+    <div class="section" data-feed="ret">
+      <div class="section-label">
+        <span>From Shenzhen Bay Port <span class="to"><span class="arrow">→</span>Fu Tai Estate</span></span>
+        <span class="live" role="status" aria-live="polite">
+          <span class="dot"></span>
+          <span class="status">Connecting…</span>
+        </span>
+      </div>
+      <section class="buses">
+        <div class="empty">Loading departures…</div>
+      </section>
+      <p class="note">Return trips serve Fu Tai Shopping Centre, then continue to Shan King Estate (山景邨).</p>
+    </div>
 
     <footer>
       <span>
@@ -270,14 +302,29 @@
     (() => {
       'use strict';
 
-      // B3A outbound (towards Shenzhen Bay Port), Fu Tai Estate stop.
-      const API = 'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/003261/B3A';
+      const API = 'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB';
+      const ROUTE = 'B3A';
       const REFRESH_MS = 30_000;
       const MAX_BUSES = 3;
 
-      const busesEl = document.getElementById('buses');
-      const statusEl = document.getElementById('status');
-      const dotEl = document.getElementById('dot');
+      // Outbound: board at Fu Tai Estate towards Shenzhen Bay Port (dir O).
+      // Return:   board at Shenzhen Bay Port towards Fu Tai Estate (dir I).
+      const FEEDS = [
+        { key: 'out', stop: '003261', dir: 'O' },
+        { key: 'ret', stop: '003208', dir: 'I' },
+      ].map((feed) => {
+        const root = document.querySelector(`.section[data-feed="${feed.key}"]`);
+        return {
+          ...feed,
+          root,
+          grid: root.querySelector('.buses'),
+          dot: root.querySelector('.dot'),
+          status: root.querySelector('.status'),
+          online: false,
+          rendered: false,
+        };
+      });
+
       const updatedEl = document.getElementById('updated');
       const countdownEl = document.getElementById('countdown');
       const refreshBtn = document.getElementById('refresh');
@@ -299,7 +346,6 @@
 
       let nextRefresh = Date.now() + REFRESH_MS;
       let loading = false;
-      let hasRendered = false;
 
       const escapeHTML = (value) =>
         String(value).replace(/[&<>"']/g, (char) => ({
@@ -318,7 +364,7 @@
       }
 
       function paintMinutes() {
-        busesEl.querySelectorAll('[data-eta]').forEach((card) => {
+        document.querySelectorAll('[data-eta]').forEach((card) => {
           const minutes = minutesUntil(card.dataset.eta);
           if (minutes === null) return;
           card.querySelector('.mins').textContent = minutes === 0 ? 'Due' : String(minutes);
@@ -326,59 +372,49 @@
         });
       }
 
-      function render(data) {
+      function renderFeed(feed, data) {
         const buses = (Array.isArray(data) ? data : [])
-          .filter((bus) => bus && bus.route === 'B3A')
-          .sort((a, b) => {
-            const aTime = Date.parse(a.eta);
-            const bTime = Date.parse(b.eta);
-            return (Number.isNaN(aTime) ? Infinity : aTime) - (Number.isNaN(bTime) ? Infinity : bTime);
-          })
+          .filter((bus) => bus && bus.route === ROUTE && bus.dir === feed.dir && !Number.isNaN(Date.parse(bus.eta)))
+          .sort((a, b) => Date.parse(a.eta) - Date.parse(b.eta))
           .slice(0, MAX_BUSES);
 
         if (buses.length === 0) {
-          busesEl.innerHTML =
+          feed.grid.innerHTML =
             '<div class="empty">No upcoming departures right now.' +
             '<span>This board checks again every 30 seconds.</span></div>';
-          hasRendered = true;
+          feed.rendered = true;
           return;
         }
 
-        busesEl.innerHTML = buses.map((bus, index) => {
-          const validEta = Boolean(bus.eta) && !Number.isNaN(Date.parse(bus.eta));
-          const minutes = validEta ? minutesUntil(bus.eta) : null;
-          const time = validEta ? hkTime.format(new Date(bus.eta)) : '—';
+        feed.grid.innerHTML = buses.map((bus, index) => {
+          const minutes = minutesUntil(bus.eta);
+          const time = hkTime.format(new Date(bus.eta));
           const remark = (bus.rmk_en || '').trim();
           const minutesText = minutes === null ? '—' : minutes === 0 ? 'Due' : String(minutes);
           const unitText = minutes === null || minutes === 0 ? '' : 'min';
 
           return [
-            `<article class="bus${index === 0 ? ' next' : ''}"${validEta ? ` data-eta="${escapeHTML(bus.eta)}"` : ''}>`,
+            `<article class="bus${index === 0 ? ' next' : ''}" data-eta="${escapeHTML(bus.eta)}">`,
             '  <div class="eta">',
             `    <span class="mins">${minutesText}</span>`,
             `    <span class="unit">${unitText}</span>`,
             '  </div>',
-            `  <div class="clock">${validEta ? `Scheduled <strong>${time}</strong>` : 'No time available'}</div>`,
+            `  <div class="clock">Scheduled <strong>${time}</strong></div>`,
             remark ? `  <div class="rmk">${escapeHTML(remark)}</div>` : '',
             '</article>',
           ].join('\n');
         }).join('\n');
 
-        hasRendered = true;
+        feed.rendered = true;
         paintMinutes();
       }
 
-      async function load() {
-        if (loading) return;
-        loading = true;
-        refreshBtn.classList.add('spin');
-        dotEl.classList.remove('offline');
-
+      async function loadFeed(feed) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 12_000);
 
         try {
-          const response = await fetch(API, {
+          const response = await fetch(`${API}/${feed.stop}/${ROUTE}`, {
             signal: controller.signal,
             cache: 'no-store',
             headers: { Accept: 'application/json' },
@@ -386,32 +422,41 @@
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
           const payload = await response.json();
-          render(payload.data);
-
-          statusEl.textContent = 'Live';
-          updatedEl.textContent = `Updated ${hkTimeSec.format(new Date())}`;
-          updatedEl.title = payload.generated_timestamp
-            ? `Feed generated ${payload.generated_timestamp}`
-            : '';
+          renderFeed(feed, payload.data);
+          feed.online = true;
+          feed.status.textContent = 'Live';
+          feed.dot.classList.remove('offline');
         } catch (error) {
-          dotEl.classList.add('offline');
-          statusEl.textContent = 'Offline';
+          feed.online = false;
+          feed.status.textContent = 'Offline';
+          feed.dot.classList.add('offline');
 
-          if (hasRendered) {
-            updatedEl.textContent = 'Showing last known times';
-          } else {
-            updatedEl.textContent = 'Unable to reach the feed';
-            busesEl.innerHTML =
+          if (!feed.rendered) {
+            feed.grid.innerHTML =
               '<div class="empty">Could not load the ETA feed.' +
               '<span>Retrying automatically every 30 seconds…</span></div>';
           }
         } finally {
           clearTimeout(timeout);
-          loading = false;
-          refreshBtn.classList.remove('spin');
-          nextRefresh = Date.now() + REFRESH_MS;
-          tick();
         }
+      }
+
+      async function load() {
+        if (loading) return;
+        loading = true;
+        refreshBtn.classList.add('spin');
+
+        await Promise.all(FEEDS.map(loadFeed));
+
+        const anyOnline = FEEDS.some((feed) => feed.online);
+        updatedEl.textContent = anyOnline
+          ? `Updated ${hkTimeSec.format(new Date())}`
+          : 'Unable to reach the feed';
+
+        loading = false;
+        refreshBtn.classList.remove('spin');
+        nextRefresh = Date.now() + REFRESH_MS;
+        tick();
       }
 
       function tick() {
